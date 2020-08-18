@@ -17,7 +17,8 @@ check() {
 	# recommendations for writing a check:
 	# * use curl -s
 	# * set curl --connect-timeout
-	curl -s --connect-timeout 5 https://www.dzombak.com | grep -c "<title> # Chris Dzombak</title>"
+	# * see https://stackoverflow.com/a/42873372 for notes on curl retry options
+	curl -s --connect-timeout 5 --max-time 15 --retry 3 --retry-max-time 50 https://www.dzombak.com | grep -c "<title> # Chris Dzombak</title>"
 }
 
 #
