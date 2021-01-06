@@ -85,12 +85,12 @@ send_sms() {
 alert_would_exceed_max_allowed() {
 	local ALERTS_TODAY
 	ALERTS_TODAY=$(grep "$NOW_D" "$LOG_FILE" | grep -c "ALERT")
-	if (( ALERTS_TODAY >= DAILY_LIMIT )); then
+	if (( ALERTS_TODAY >= (2*DAILY_LIMIT) )); then
 		return 0  # success exit code, indicating yes it would exceed max allowed
 	fi
 	local ALERTS_THIS_HOUR
 	ALERTS_THIS_HOUR=$(grep "$NOW_H" "$LOG_FILE" | grep -c "ALERT")
-	if (( ALERTS_THIS_HOUR >= HOURLY_LIMIT )); then
+	if (( ALERTS_THIS_HOUR >= (2*HOURLY_LIMIT) )); then
 		return 0  # success exit code, indicating yes it would exceed max allowed
 	fi
 	return 1  # failure exit code, indicating it would not exceed max allowed
