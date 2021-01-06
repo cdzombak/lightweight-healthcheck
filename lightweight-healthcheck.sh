@@ -51,7 +51,7 @@ if [ ! -f "$LOG_FILE" ]; then
 	log_ok
 fi
 if ! tail -n 1 "$LOG_FILE" | grep -c "|" >/dev/null; then
-	# last log is the old format. exit and we'll finish checking next time
+	# last log is the old format. log a parse-able line, exit, and we'll finish checking next time
 	log_ok
 	exit 0
 fi
@@ -117,24 +117,6 @@ send_alert() {
 	fi
 }
 
-send_alert_if_delay_passed() {
-	local EPOCH_LAST_LOG
-	local EPOCH_NOW
-	if command -v gdate >/dev/null; then
-		EPOCH_LAST_LOG=$(gdate -d "$LAST_DATE" +%s)
-		EPOCH_NOW=$(gdate -d "$NOW" +%s)
-	else
-		EPOCH_LAST_LOG=$(date -d "$LAST_DATE" +%s)
-		EPOCH_NOW=$(date -d "$NOW" +%s)
-	fi
-	local DIFF
-	DIFF=$(( (EPOCH_NOW - EPOCH_LAST_LOG + 1) / 60))
-	if (( DIFF >= DELAY_MINUTES )); then
-		send_alert
-		log_alert
-	fi
-}
-
 if [ "$OK" == true ]; then
 	if [ "$LAST_STATUS" = "OK" ]; then
 		exit 0
@@ -148,10 +130,24 @@ if [ "$OK" == true ]; then
 	fi
 else
 	if [ "$LAST_STATUS" = "OK" ]; then
-		send_alert_if_delay_passed
 		log_down
+		if (( DELAY_MINUTES == 0)); then
+			send_alert
+			log_alert
+		fi
 	elif [ "$LAST_STATUS" = "DOWN" ]; then
-		send_alert_if_delay_passed
+		if command -v gdate >/dev/null; then
+			EPOCH_LAST_LOG=$(gdate -d "$LAST_DATE" +%s)
+			EPOCH_NOW=$(gdate -d "$NOW" +%s)
+		else
+			EPOCH_LAST_LOG=$(date -d "$LAST_DATE" +%s)
+			EPOCH_NOW=$(date -d "$NOW" +%s)
+		fi
+		MINUTES_SINCE_LAST_LOG=$(( (EPOCH_NOW - EPOCH_LAST_LOG + 1) / 60))
+		if (( MINUTES_SINCE_LAST_LOG >= DELAY_MINUTES )); then
+			send_alert
+			log_alert
+		fi
 	elif [ "$LAST_STATUS" = "ALERT" ]; then
 		exit 0
 	else
