@@ -57,7 +57,9 @@ if ! tail -n 1 "$LOG_FILE" | grep -c "|" >/dev/null; then
 fi
 
 IFS='|' read -ra LASTLOG <<< "$(tail -n 1 "$LOG_FILE")"
-LAST_DATE="${LASTLOG[0]}"
+# shellcheck disable=SC2001
+LAST_DATE=$(echo "${LASTLOG[0]}" | sed -e 's/[[:space:]]*$//')
+# shellcheck disable=SC2001
 LAST_STATUS=$(echo "${LASTLOG[1]}" | sed -e 's/^[[:space:]]*//')
 
 OK=false
@@ -106,8 +108,13 @@ send_alert() {
 	if ! alert_would_exceed_max_allowed ; then
 		return
 	fi
-	echo -e "$THING_DESC was DOWN at $NOW\n\n(seen by $HOSTNAME)" | mailx -s "$EMAIL_SUBJECT - ALERT" $EMAIL_TO
-	send_sms "$THING_DESC was DOWN at $NOW"
+	if [ "$LAST_STATUS" = "DOWN" ]; then
+		echo -e "$THING_DESC was DOWN at $LAST_DATE\n\n(seen by $HOSTNAME)" | mailx -s "$EMAIL_SUBJECT - ALERT" $EMAIL_TO
+		send_sms "$THING_DESC was DOWN at $LAST_DATE"
+	else
+		echo -e "$THING_DESC was DOWN at $NOW\n\n(seen by $HOSTNAME)" | mailx -s "$EMAIL_SUBJECT - ALERT" $EMAIL_TO
+		send_sms "$THING_DESC was DOWN at $NOW"
+	fi
 }
 
 send_alert_if_delay_passed() {
