@@ -21,7 +21,7 @@ check() {
 	# - set curl --connect-timeout and --max-time to a small number
 	# - see https://stackoverflow.com/a/42873372 for notes on curl retry options
 
-	curl -s --connect-timeout 5 --max-time 15 --retry 3 --retry-max-time 50 https://www.dzombak.com | grep -c "<title> # Chris Dzombak</title>"
+	curl -s --connect-timeout 5 --max-time 15 --retry 3 --retry-max-time 45 https://www.dzombak.com | grep -c "<title> # Chris Dzombak</title>"
 }
 
 #################################
